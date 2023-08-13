@@ -11,7 +11,7 @@
 	<groupId>com.angel</groupId>
 	<artifactId>web-hello-world</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>hello-world</name>
+	<name>web-hello-world</name>
 	<description>Demo project for Spring Boot</description>
 	<properties>
 		<java.version>17</java.version>
@@ -30,8 +30,11 @@
 			<scope>test</scope>
 		</dependency>
 
-		<!-- Logger	-->
-		<dependency>
+	<!-- 
+		Logger/abstract constructor/etc, see lombok docs:
+		https://projectlombok.org/api/lombok/package-summary
+	-->
+	<dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
     </dependency>
