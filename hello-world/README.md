@@ -9,7 +9,7 @@ This project was built in VS Code. To ensure a good time, be sure to add the fol
 # Running in Command Line
 First, we will package the application into a jar using: `mvn clean package`. 
 
-Once that is built we can run the application using: `java -jar target/hello-world-java17-0.0.1-SNAPSHOT.jar`
+Once that is built we can run the application using: `java -jar target/hello-world-0.0.1-SNAPSHOT.jar`
 
 # Running using VS Code Run/Debug
 Be sure you have vscode configured to use maven and the version of java you are using for your project if you want to use the available UI features.

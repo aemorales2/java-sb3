@@ -1,4 +1,4 @@
-package com.angel.helloworldjava17;
+package com.angel.helloworld;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

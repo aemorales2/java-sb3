@@ -1,4 +1,4 @@
-package com.angel.helloworldjava17;
+package com.angel.helloworld;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
