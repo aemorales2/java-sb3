@@ -17,6 +17,8 @@
 		<java.version>17</java.version>
 	</properties>
 	<dependencies>
+
+		<!-- bare necessities -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter</artifactId>
@@ -28,7 +30,7 @@
 			<scope>test</scope>
 		</dependency>
 
-		<!--SLF4J-->
+		<!-- Logger	-->
 		<dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
@@ -38,6 +40,10 @@
 
 	<build>
 		<plugins>
+			<!-- 
+				Allows you to package executable jar, run SB apps, generate build info and start your SB app prior to running integration tests 
+			    See docs for full details: https://docs.spring.io/spring-boot/docs/current/maven-plugin/reference/htmlsingle/
+			-->
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
