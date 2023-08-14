@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ws-datetime
+  namespace: default
+spec:
+  # TODO: update replicas
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ws-datetime
+  template:
+    metadata:
+      labels:
+        app: ws-datetime
+    spec:
+      containers:
+        - name: ws-datetime
+          image: ws-datetime:v1
+          # TODO: update resources for QoS
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "100Mi"
+            limits:
+              cpu: "250m"
+              memory: "250Mi"
+          imagePullPolicy: Never
+          env:
+            - name: JAVA_TOOL_OPTIONS
+              value: -Dspring.profiles.active=LOCAL -XX:MaxRAMPercentage=60.0 -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+          # TODO: expose debugger port
+          # TODO: revisit how we specify ports
+          ports:
+            - containerPort: 8080
+          # TODO: Add startup probe and fix liveness/readiness
+          livenessProbe:
+            httpGet:
+              path: /ws_datetime/actuator/health
+              port: 8080
+            initialDelaySeconds: 25
+            timeoutSeconds: 5
+            periodSeconds: 5
+            failureThreshold: 5
+          readinessProbe:
+            httpGet:
+              path: /ws_datetime/actuator/health
+              port: 8080
+            initialDelaySeconds: 5
+            timeoutSeconds: 1
+            periodSeconds: 1
+            failureThreshold: 5
+---
+# update the service
+kind: Service
+apiVersion: v1
+metadata:
+  namespace: default
+  name: ws-datetime
+  labels:
+    app: ws-datetime
+spec:
+  type: NodePort
+  selector:
+    app: ws-datetime
+  ports:
+    - port: 8080
+      nodePort: 30000
+      protocol: TCP
+---
+# updae the ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /ws-datetime$1
+  name: ws-datetime
+  namespace: default
+spec:
+  rules:
+    - host: localhost
+      http:
+        paths:
+          - path: /ws_datetime(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: ws-datetime
+                port:
+                  number: 8080
