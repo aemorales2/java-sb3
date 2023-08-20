@@ -1,0 +1,52 @@
+replicas:
+  min: 2
+
+resources:
+  requests:
+    cpu: "200m"
+    memory: "200Mi"
+  limits:
+    cpu: "200m"
+    memory: "200Mi"
+
+image:
+  policy: Never
+
+env:
+  javaOptsName: JAVA_TOOL_OPTIONS
+  javaOptsValue: >-
+    -Dspring.profiles.active=LOCAL 
+    -XX:MaxRAMPercentage=60.0 
+    -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+
+ports:
+  main:
+    name: http
+    number: 8080
+  debug:
+    name: debug
+    number: 5005
+
+probes:
+  type: 
+    - startupProbe
+    - livenessProbe
+    - readinessProbe
+  endpoint:
+    path: /ws_datetime/actuator/health
+    port: http
+  initialDelaySeconds: 0
+  startupThreshold: 30
+  livenessThreshold: 5
+  readinessThreshold: 2
+
+service:
+  type: ClusterIP
+
+app: 
+  contextPath: /ws_datetime
+
+ingress:
+  class: nginx
+  host: localhost
+  pathType: Prefix

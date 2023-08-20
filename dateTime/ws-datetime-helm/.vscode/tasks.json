@@ -1,0 +1,44 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "Docker Build Image",
+        "type": "shell",
+        "command": "docker build . -t ws-datetime:v1"
+      },
+      {
+        "label": "Docker Run Container",
+        "type": "shell", 
+        "command": "docker", 
+        "args": ["run", "-d", "-e", "JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=60.0 -Dspring.profiles.active=LOCAL -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005", "-p", "8080:8080", "-p", "5005:5005", "ws-datetime:v1"],
+        "dependsOrder": "sequence",
+        "dependsOn": ["Docker Build Image"]
+      },
+      {
+        "label": "Docker Stop Container",
+        "type": "shell", 
+        "command": "docker ps -a | grep ws-datetime:v1 | awk '{print $1}' | xargs docker stop"
+      },
+      {
+        "label": "Docker Delete Container",
+        "type": "shell", 
+        "command": "docker ps -a | grep ws-datetime:v1 | awk '{print $1}' | xargs docker rm",
+        "dependsOrder": "sequence",
+        "dependsOn": ["Docker Stop Container"]
+      },
+      {
+        "label": "Docker Delete Image",
+        "type": "shell", 
+        "command": "docker images | grep ws-datetime | awk '{print $3}' | xargs docker rmi", 
+        "dependsOrder": "sequence",
+        "dependsOn": ["Docker Delete Container"]
+      },
+      {
+        "label": "Docker Cleanup",
+        "type": "shell",
+        "command": "echo 'The container and image for ws-datetime:v1 have been successfully deleted.'",
+        "dependsOrder": "sequence",
+        "dependsOn": ["Docker Delete Image"]
+      }
+    ]
+}
