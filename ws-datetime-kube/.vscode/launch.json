@@ -3,6 +3,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "kube Debugger",
+            "request": "attach",
+            "hostName": "localhost",
+            "port": "5005"
+        },
+        {
+            "type": "java",
             "name": "Docker Java Debug (Attach)",
             "preLaunchTask": "Docker Run Container",
             "request": "attach",
