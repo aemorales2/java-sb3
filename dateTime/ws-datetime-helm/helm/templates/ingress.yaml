@@ -1,8 +1,6 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: {{ .Values.app.contextPath }}
   name: {{ .Chart.Name }}
   labels:
     app: {{ .Chart.Name }}
