@@ -1,0 +1,89 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ws-datetime
+  namespace: local
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ws-datetime
+  template:
+    metadata:
+      labels:
+        app: ws-datetime
+    spec:
+      containers:
+        - name: ws-datetime
+          image: ws-datetime:v1
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "200Mi"
+            limits:
+              cpu: "200m"
+              memory: "200Mi"
+          imagePullPolicy: Never
+          env:
+            - name: JAVA_TOOL_OPTIONS
+              value: -Dspring.profiles.active=LOCAL -XX:MaxRAMPercentage=60.0 -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+          ports:
+            - name: http
+              containerPort: 8080
+            - name: debug
+              containerPort: 5005
+          startupProbe:
+            httpGet:
+              path: /ws_datetime/actuator/health
+              port: http
+            failureThreshold: 30
+          livenessProbe:
+            httpGet:
+              path: /ws_datetime/actuator/health
+              port: http
+            initialDelaySeconds: 0
+            failureThreshold: 5
+          readinessProbe:
+            httpGet:
+              path: /ws_datetime/actuator/health
+              port: http
+            initialDelaySeconds: 0
+            failureThreshold: 5
+---
+kind: Service
+apiVersion: v1
+metadata:
+  namespace: local
+  name: ws-datetime
+  labels:
+    app: ws-datetime
+spec:
+  type: ClusterIP
+  selector:
+    app: ws-datetime
+  ports:
+    - name: http
+      port: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /ws_datetime
+  name: ws-datetime
+  namespace: local
+  labels:
+    app: ws-datetime
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: localhost
+      http:
+        paths:
+          - path: /ws_datetime
+            pathType: Prefix
+            backend:
+              service:
+                name: ws-datetime
+                port:
+                  number: 8080
