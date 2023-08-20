@@ -2,10 +2,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ws-datetime
-  namespace: default
+  namespace: local
 spec:
-  # TODO: update replicas
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: ws-datetime
@@ -17,73 +16,71 @@ spec:
       containers:
         - name: ws-datetime
           image: ws-datetime:v1
-          # TODO: update resources for QoS
           resources:
             requests:
-              cpu: "100m"
-              memory: "100Mi"
+              cpu: "200m"
+              memory: "200Mi"
             limits:
-              cpu: "250m"
-              memory: "250Mi"
+              cpu: "200m"
+              memory: "200Mi"
           imagePullPolicy: Never
           env:
             - name: JAVA_TOOL_OPTIONS
               value: -Dspring.profiles.active=LOCAL -XX:MaxRAMPercentage=60.0 -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
-          # TODO: expose debugger port
-          # TODO: revisit how we specify ports
           ports:
-            - containerPort: 8080
-          # TODO: Add startup probe and fix liveness/readiness
+            - name: http
+              containerPort: 8080
+            - name: debug
+              containerPort: 5005
+          startupProbe:
+            httpGet:
+              path: /ws_datetime/actuator/health
+              port: http
+            failureThreshold: 30
           livenessProbe:
             httpGet:
               path: /ws_datetime/actuator/health
-              port: 8080
-            initialDelaySeconds: 25
-            timeoutSeconds: 5
-            periodSeconds: 5
+              port: http
+            initialDelaySeconds: 0
             failureThreshold: 5
           readinessProbe:
             httpGet:
               path: /ws_datetime/actuator/health
-              port: 8080
-            initialDelaySeconds: 5
-            timeoutSeconds: 1
-            periodSeconds: 1
+              port: http
+            initialDelaySeconds: 0
             failureThreshold: 5
 ---
-# update the service
 kind: Service
 apiVersion: v1
 metadata:
-  namespace: default
+  namespace: local
   name: ws-datetime
   labels:
     app: ws-datetime
 spec:
-  type: NodePort
+  type: ClusterIP
   selector:
     app: ws-datetime
   ports:
-    - port: 8080
-      nodePort: 30000
-      protocol: TCP
-    - port: 5005
-      protocol: TCP
+    - name: http
+      port: 8080
 ---
-# updae the ingress
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /ws-datetime$1
+    nginx.ingress.kubernetes.io/rewrite-target: /ws_datetime
   name: ws-datetime
-  namespace: default
+  namespace: local
+  labels:
+    app: ws-datetime
 spec:
+  ingressClassName: nginx
   rules:
     - host: localhost
       http:
         paths:
-          - path: /ws_datetime(.*)
+          - path: /ws_datetime
             pathType: Prefix
             backend:
               service:

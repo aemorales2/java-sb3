@@ -6,117 +6,42 @@ This project was built in VS Code. To ensure a good time, be sure to add the fol
 * Lombok Annotations Support for VS Code
 * XML Language Support by Red hat
 * Docker
+* Kubernetes
+
+# PreReqs
+* Have a kubernetes cluster and kubectl available
+* Install helm CLI 
+* Install ingress controller to avoid using port forwarding
+
+```
+helm repo add nginx-stable https://helm.nginx.com/stable
+helm repo update
+helm install nginx-ingress nginx-stable/nginx-ingress --set rbac.create=true -n nginx --create-namespace
+```
 
 # Running in Command Line
 First, we will package the application into a jar using: `mvn clean package`. 
 
-Then, we need to build our docker image using: `docker build . -t ws-datetime:v1`
+Then, we need to build our docker image using: `docker build . -t ws-datetime:v1`.
 
-Finally, we can run our app using: `docker run -t --rm -e JAVA_TOOL_OPTIONS="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005" -p 8080:8080 -p 5005:5005 ws-datetime:v1`
+Next, we will create the `local` namespace for our app to live in: `kubectl create namespace local`.
 
-# Running using VS Code Run/Debug
-Be sure you have vscode configured to use maven and the version of java you are using for your project if you want to use the available UI features.
+Finally, we can run our app using: `kubectl apply -f manifest.yaml`. This will create the deployment, ingress, and service (along with acocompanying managed resources). 
 
-## Configuring Maven
-Open VS Code settings (ctrl + ',') and search for `maven.executable.path`. If this is blank, be sure to set this to the path where you have maven installed 
+Our app is available at: `http://localhost/ws_datetime/currentDateTime`.
 
-## Configuring Java
-Open VS Code settings (ctrl + ',') and search for `java.configuration.runtimes`. Select `edit in settings.json` and add the paths for the different versions of Java you have. Below is a sample of what that might look like. 
+# Debugging in VS Code
+Run the application by following the steps in the section above. 
 
-```
-"java.configuration.runtimes": [
-    {
-        "name": "JavaSE-11",
-        "path": "C:\\Program Files\\Java\\jdk-11.0.12"
-    },
-    {
-        "name": "JavaSE-16",
-        "path": "C:\\Program Files\\Java\\jdk-16.0.2"
-    },
-    {
-        "name": "JavaSE-17",
-        "path": "C:\\Program Files\\Java\\jdk-17"
-    }
-],
-```
-
-## Create launch.json and tasks.json
-Go to the Run/Debug extension and select `create a launch.json file` and select `Java`. This will generate a launch.json file under a new directory named `.vscode` in your project's root directory. Replace the content of the file with the below.
-
+In `.vscode/launch.json` add a new configuration under `Java: Attach to Remote Program` that should look something like below.
 ```
 {
-    "version": "2.0.0",
-    "configurations": [
-        {
-            "type": "java",
-            "name": "Docker Java Debug (Attach)",
-            "preLaunchTask": "Docker Run Container",
-            "request": "attach",
-            "hostName": "localhost",
-            "port": 5005,
-            "postDebugTask": "Docker Cleanup"
-        }
-    ]
+    "type": "java",
+    "name": "kube Debugger",
+    "request": "attach",
+    "hostName": "localhost",
+    "port": "5005"
 }
 ```
 
-Create a new file named `tasks.json` with the following content (remember to replace desired-image-name with your desired value): 
-
-```
-{
-    "version": "2.0.0",
-    "tasks": [
-      {
-        "label": "Docker Build Image",
-        "type": "shell",
-        "command": "docker build . -t {desired-image-name}:v1"
-      },
-      {
-        "label": "Docker Run Container",
-        "type": "shell", 
-        "command": "docker", 
-        "args": ["run", "-d", "-e", "JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=60.0 -Dspring.profiles.active=LOCAL -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005", "-p", "8080:8080", "-p", "5005:5005", "{desired-image-name}:v1"],
-        "dependsOrder": "sequence",
-        "dependsOn": ["Docker Build Image"]
-      },
-      {
-        "label": "Docker Stop Container",
-        "type": "shell", 
-        "command": "docker ps -a | grep {desired-image-name}:v1 | awk '{print $1}' | xargs docker stop"
-      },
-      {
-        "label": "Docker Delete Container",
-        "type": "shell", 
-        "command": "docker ps -a | grep {desired-image-name}:v1 | awk '{print $1}' | xargs docker rm",
-        "dependsOrder": "sequence",
-        "dependsOn": ["Docker Stop Container"]
-      },
-      {
-        "label": "Docker Delete Image",
-        "type": "shell", 
-        "command": "docker images | grep {desired-image-name} | awk '{print $3}' | xargs docker rmi", 
-        "dependsOrder": "sequence",
-        "dependsOn": ["Docker Delete Container"]
-      },
-      {
-        "label": "Docker Cleanup",
-        "type": "shell",
-        "command": "echo 'The container and image for {desired-image-name}:v1 have been successfully deleted.'",
-        "dependsOrder": "sequence",
-        "dependsOn": ["Docker Delete Image"]
-      }
-    ]
-}
-
-```
-
-## Running the application
-Use `mvn clean package` to build the app. Now you can use the green play button in the Run/Debug extension to run your application.
-
-# Reference Documentation
-For further reference, please consider the following sections:
-
-* [Official Apache Maven documentation](https://maven.apache.org/guides/index.html)
-* [Spring Boot Maven Plugin Reference Guide](https://docs.spring.io/spring-boot/docs/2.5.4/maven-plugin/reference/html/)
-* [Create an OCI image](https://docs.spring.io/spring-boot/docs/2.5.4/maven-plugin/reference/html/#build-image)
-
+The above works thanks to line 29 of manifest.yaml where we enable the Java Debug Wire Protocol (JDWP) with port 5005.
