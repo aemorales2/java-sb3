@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ws-datetime
+  namespace: local
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ws-datetime
+  template:
+    metadata:
+      labels:
+        app: ws-datetime
+    spec:
+      containers:
+        - name: ws-datetime
+          image: ws-datetime:v1
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "200Mi"
+            limits:
+              cpu: "200m"
+              memory: "200Mi"
+          imagePullPolicy: Never
+          env:
+            - name: JAVA_TOOL_OPTIONS
+              value: -Dspring.profiles.active=LOCAL -XX:MaxRAMPercentage=60.0 -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+          ports:
+            - name: http
+              containerPort: 8080
+            - name: debug
+              containerPort: 5005
+          startupProbe:
+            httpGet:
+              path: /ws_datetime/actuator/health
+              port: http
+            failureThreshold: 30
+          livenessProbe:
+            httpGet:
+              path: /ws_datetime/actuator/health
+              port: http
+            initialDelaySeconds: 0
+            failureThreshold: 5
+          readinessProbe:
+            httpGet:
+              path: /ws_datetime/actuator/health
+              port: http
+            initialDelaySeconds: 0
+            failureThreshold: 5

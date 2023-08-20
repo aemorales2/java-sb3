@@ -1,0 +1,14 @@
+kind: Service
+apiVersion: v1
+metadata:
+  namespace: local
+  name: ws-datetime
+  labels:
+    app: ws-datetime
+spec:
+  type: ClusterIP
+  selector:
+    app: ws-datetime
+  ports:
+    - name: http
+      port: 8080
