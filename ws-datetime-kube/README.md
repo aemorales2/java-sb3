@@ -30,6 +30,9 @@ Finally, we can run our app using: `kubectl apply -f manifest.yaml`. This will c
 
 Our app is available at: `http://localhost/ws_datetime/currentDateTime`.
 
+# Clean Up the Cluster
+Run the following command to delete all the objects specified in the manifest file: `kubectl delete -f manifest.yaml`.
+
 # Debugging in VS Code
 Run the application by following the steps in the section above. 
 
