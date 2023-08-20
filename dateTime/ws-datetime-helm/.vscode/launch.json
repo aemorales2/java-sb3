@@ -1,0 +1,21 @@
+{
+    "version": "2.0.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "kube Debugger",
+            "request": "attach",
+            "hostName": "localhost",
+            "port": "5005"
+        },
+        {
+            "type": "java",
+            "name": "Docker Java Debug (Attach)",
+            "preLaunchTask": "Docker Run Container",
+            "request": "attach",
+            "hostName": "localhost",
+            "port": 5005,
+            "postDebugTask": "Docker Cleanup"
+        }
+    ]
+}

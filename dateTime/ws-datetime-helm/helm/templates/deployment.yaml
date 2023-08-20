@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Chart.Name }}
+spec:
+  replicas: {{ .Values.replicas.min }}
+  selector:
+    matchLabels:
+      app: {{ .Chart.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Chart.Name }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: {{ .Chart.Name }}:v1
+          resources:
+          {{- range $key, $value := $.Values.resources }}
+            {{ $key }}:
+            {{- range $k, $v := $value }}
+              {{ $k }}: {{ $v | quote }}
+            {{- end }}
+          {{- end }}
+          imagePullPolicy: {{ .Values.image.policy }}
+          env:
+            - name: {{ .Values.env.javaOptsName }}
+              value: {{ .Values.env.javaOptsValue }}
+          ports:
+          {{- range $key, $value := $.Values.ports }}
+            - name: {{ $value.name }}
+              containerPort: {{ $value.number }}
+          {{- end }}
+          {{- range $.Values.probes.type }}
+          {{ . }}:
+            httpGet:
+              {{- range $key, $value := $.Values.probes.endpoint }}
+               {{ $key }}:  {{ $value }}
+              {{- end }}
+            {{- if ne . "startupProbe"}}
+            initialDelaySeconds: 0
+            {{- end }}
+            {{- if eq . "startupProbe" }}
+            failureThreshold: {{ $.Values.probes.startupThreshold }}
+            {{- else if eq . "livenessProbe" }}
+            failureThreshold: {{ $.Values.probes.livenessThreshold }}
+            {{- else if eq . "readinessProbe" }}
+            failureThreshold: {{ $.Values.probes.readinessThreshold }}
+            {{- end }}
+          {{- end }}
+          
